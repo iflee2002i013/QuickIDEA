@@ -13,8 +13,6 @@ namespace InspirationRecorder
 
         public MainWindow()
         {
-            InitializeComponent();
-            
             _config = Config.Load();
             _ideaService = new IdeaService(_config);
             
