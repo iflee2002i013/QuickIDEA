@@ -2,6 +2,8 @@
 using System.Windows;
 using GlobalHotKey;
 using System.Windows.Input;
+using System.Windows.Forms;
+using Drawing = System.Drawing;
 
 namespace InspirationRecorder
 {
@@ -10,6 +12,7 @@ namespace InspirationRecorder
         private HotKeyManager hotKeyManager;
         private readonly Config _config;
         private readonly IdeaService _ideaService;
+        private NotifyIcon trayIcon;
 
         public MainWindow()
         {
@@ -19,13 +22,16 @@ namespace InspirationRecorder
             _ideaService = new IdeaService(_config);
             
             InitializeHotKey();
+            InitializeTrayIcon();
+            
+            this.WindowState = WindowState.Minimized;
+            this.ShowInTaskbar = false;
         }
 
         private void InitializeHotKey()
         {
             hotKeyManager = new HotKeyManager();
             
-            // 注册Ctrl + Shift + I作为快捷键
             hotKeyManager.Register(Key.I, ModifierKeys.Control | ModifierKeys.Shift);
             
             hotKeyManager.KeyPressed += HotKeyManager_KeyPressed;
@@ -47,7 +53,7 @@ namespace InspirationRecorder
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"保存失败：{ex.Message}", "错误", 
+                    System.Windows.MessageBox.Show($"保存失败：{ex.Message}", "错误", 
                                   MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -55,10 +61,8 @@ namespace InspirationRecorder
 
         private bool IsAnyWindowFullScreen()
         {
-            // 获取主屏幕尺寸
-            var screenBounds = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
+            var screenBounds = Screen.PrimaryScreen.Bounds;
             
-            // 获取前台窗口句柄
             var foregroundWindow = NativeMethods.GetForegroundWindow();
             
             if (foregroundWindow != IntPtr.Zero)
@@ -66,7 +70,6 @@ namespace InspirationRecorder
                 NativeMethods.RECT rect;
                 if (NativeMethods.GetWindowRect(foregroundWindow, out rect))
                 {
-                    // 检查窗口是否占据整个屏幕
                     return rect.Left <= 0 && rect.Top <= 0 &&
                            rect.Right >= screenBounds.Width &&
                            rect.Bottom >= screenBounds.Height;
@@ -75,8 +78,49 @@ namespace InspirationRecorder
             return false;
         }
 
+        private void InitializeTrayIcon()
+        {
+            trayIcon = new NotifyIcon
+            {
+                Icon = new Drawing.Icon("D:\\Cursor_prj\\Windows\\QuickIDEA\\Resources\\app.ico"),
+                Visible = true,
+                Text = "灵感记录器"
+            };
+
+            var contextMenu = new ContextMenuStrip();
+            contextMenu.Items.Add("打开主窗口", null, (s, e) => 
+            {
+                this.WindowState = WindowState.Normal;
+                this.Show();
+                this.Activate();
+            });
+            contextMenu.Items.Add("退出", null, (s, e) => 
+            {
+                System.Windows.Application.Current.Shutdown();
+            });
+
+            trayIcon.ContextMenuStrip = contextMenu;
+
+            trayIcon.DoubleClick += (s, e) => 
+            {
+                this.WindowState = WindowState.Normal;
+                this.Show();
+                this.Activate();
+            };
+        }
+
+        protected override void OnStateChanged(EventArgs e)
+        {
+            if (WindowState == WindowState.Minimized)
+            {
+                this.Hide();
+            }
+            base.OnStateChanged(e);
+        }
+
         protected override void OnClosed(EventArgs e)
         {
+            trayIcon.Dispose();
             hotKeyManager?.Dispose();
             base.OnClosed(e);
         }
