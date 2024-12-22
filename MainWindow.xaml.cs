@@ -84,16 +84,24 @@ namespace InspirationRecorder
             {
                 Icon = new Drawing.Icon("D:\\Cursor_prj\\Windows\\QuickIDEA\\Resources\\app.ico"),
                 Visible = true,
-                Text = "灵感记录器"
+                Text = "QuickIDEA"
             };
 
             var contextMenu = new ContextMenuStrip();
-            contextMenu.Items.Add("打开主窗口", null, (s, e) => 
+            
+            contextMenu.Items.Add("快速记录", null, (s, e) => 
             {
-                this.WindowState = WindowState.Normal;
-                this.Show();
-                this.Activate();
+                ShowInputWindow();
             });
+
+            contextMenu.Items.Add("设置", null, (s, e) => 
+            {
+                var settingsWindow = new SettingsWindow(_config);
+                settingsWindow.ShowDialog();
+            });
+
+            contextMenu.Items.Add(new ToolStripSeparator());
+
             contextMenu.Items.Add("退出", null, (s, e) => 
             {
                 System.Windows.Application.Current.Shutdown();
@@ -103,10 +111,27 @@ namespace InspirationRecorder
 
             trayIcon.DoubleClick += (s, e) => 
             {
-                this.WindowState = WindowState.Normal;
-                this.Show();
-                this.Activate();
+                ShowInputWindow();
             };
+        }
+
+        private void ShowInputWindow()
+        {
+            var inputWindow = new InputWindow(_config);
+            inputWindow.ShowDialog();
+
+            if (!string.IsNullOrWhiteSpace(inputWindow.InputText))
+            {
+                try
+                {
+                    _ideaService.SaveIdea(inputWindow.InputText);
+                }
+                catch (Exception ex)
+                {
+                    System.Windows.MessageBox.Show($"保存失败：{ex.Message}", "错误", 
+                                  MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
         }
 
         protected override void OnStateChanged(EventArgs e)
