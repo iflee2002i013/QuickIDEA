@@ -3,11 +3,15 @@ using System.Windows.Input;
 
 namespace InspirationRecorder
 {
-    public partial class InputWindow : Window
+    public partial class InputWindow : Window, IDisposable
     {
-        public InputWindow()
+        private readonly Config _config;
+        private bool _disposed = false;
+
+        public InputWindow(Config config)
         {
             InitializeComponent();
+            _config = config;
             
             // 注册按键事件
             this.KeyDown += InputWindow_KeyDown;
@@ -30,9 +34,33 @@ namespace InspirationRecorder
             }
         }
 
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            // 暂时隐藏输入窗口
+            this.Hide();
+            
+            var settingsWindow = new SettingsWindow(_config);
+            settingsWindow.ShowDialog();
+            
+            // 设置窗口关闭后重新显示输入窗口
+            this.Show();
+            // 重新获取焦点
+            this.Activate();
+            InputTextBox.Focus();
+        }
+
         public string InputText
         {
             get { return InputTextBox.Text; }
+        }
+
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                this.KeyDown -= InputWindow_KeyDown;
+                _disposed = true;
+            }
         }
     }
 } 

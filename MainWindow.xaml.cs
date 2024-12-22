@@ -2,6 +2,8 @@
 using System.Windows;
 using GlobalHotKey;
 using System.Windows.Input;
+using System.Windows.Forms;
+using Drawing = System.Drawing;
 
 namespace InspirationRecorder
 {
@@ -10,20 +12,29 @@ namespace InspirationRecorder
         private HotKeyManager hotKeyManager;
         private readonly Config _config;
         private readonly IdeaService _ideaService;
+        private NotifyIcon trayIcon;
+        private ContextMenuStrip contextMenu;
 
         public MainWindow()
         {
+            InitializeComponent();
+            
             _config = Config.Load();
             _ideaService = new IdeaService(_config);
             
             InitializeHotKey();
+            InitializeTrayIcon();
+            
+            this.WindowState = WindowState.Minimized;
+            this.ShowInTaskbar = false;
+
+            System.Windows.Application.Current.Exit += Current_Exit;
         }
 
         private void InitializeHotKey()
         {
             hotKeyManager = new HotKeyManager();
             
-            // 注册Ctrl + Shift + I作为快捷键
             hotKeyManager.Register(Key.I, ModifierKeys.Control | ModifierKeys.Shift);
             
             hotKeyManager.KeyPressed += HotKeyManager_KeyPressed;
@@ -34,7 +45,7 @@ namespace InspirationRecorder
             if (IsAnyWindowFullScreen())
                 return;
 
-            var inputWindow = new InputWindow();
+            var inputWindow = new InputWindow(_config);
             inputWindow.ShowDialog();
 
             if (!string.IsNullOrWhiteSpace(inputWindow.InputText))
@@ -45,7 +56,7 @@ namespace InspirationRecorder
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"保存失败：{ex.Message}", "错误", 
+                    System.Windows.MessageBox.Show($"保存失败：{ex.Message}", "错误", 
                                   MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
@@ -53,10 +64,8 @@ namespace InspirationRecorder
 
         private bool IsAnyWindowFullScreen()
         {
-            // 获取主屏幕尺寸
-            var screenBounds = System.Windows.Forms.Screen.PrimaryScreen.Bounds;
+            var screenBounds = Screen.PrimaryScreen.Bounds;
             
-            // 获取前台窗口句柄
             var foregroundWindow = NativeMethods.GetForegroundWindow();
             
             if (foregroundWindow != IntPtr.Zero)
@@ -64,7 +73,6 @@ namespace InspirationRecorder
                 NativeMethods.RECT rect;
                 if (NativeMethods.GetWindowRect(foregroundWindow, out rect))
                 {
-                    // 检查窗口是否占据整个屏幕
                     return rect.Left <= 0 && rect.Top <= 0 &&
                            rect.Right >= screenBounds.Width &&
                            rect.Bottom >= screenBounds.Height;
@@ -73,10 +81,94 @@ namespace InspirationRecorder
             return false;
         }
 
+        private void InitializeTrayIcon()
+        {
+            contextMenu = new ContextMenuStrip();
+            
+            contextMenu.Items.Add("快速记录", null, (s, e) => ShowInputWindow());
+            contextMenu.Items.Add("设置", null, (s, e) => ShowSettingsWindow());
+            contextMenu.Items.Add(new ToolStripSeparator());
+            contextMenu.Items.Add("退出", null, (s, e) => System.Windows.Application.Current.Shutdown());
+
+            trayIcon = new NotifyIcon
+            {
+                Icon = new Drawing.Icon("D:\\Cursor_prj\\Windows\\QuickIDEA\\Resources\\app.ico"),
+                Visible = true,
+                Text = "QuickIDEA",
+                ContextMenuStrip = contextMenu
+            };
+
+            trayIcon.DoubleClick += (s, e) => ShowInputWindow();
+        }
+
+        private void ShowSettingsWindow()
+        {
+            using (var settingsWindow = new SettingsWindow(_config))
+            {
+                settingsWindow.ShowDialog();
+            }
+        }
+
+        private void ShowInputWindow()
+        {
+            using (var inputWindow = new InputWindow(_config))
+            {
+                inputWindow.ShowDialog();
+
+                if (!string.IsNullOrWhiteSpace(inputWindow.InputText))
+                {
+                    try
+                    {
+                        _ideaService.SaveIdea(inputWindow.InputText);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Windows.MessageBox.Show($"保存失败：{ex.Message}", "错误", 
+                                      MessageBoxButton.OK, MessageBoxImage.Error);
+                    }
+                }
+            }
+        }
+
+        private void Current_Exit(object sender, ExitEventArgs e)
+        {
+            Cleanup();
+        }
+
+        private void Cleanup()
+        {
+            if (trayIcon != null)
+            {
+                trayIcon.Visible = false;
+                trayIcon.Dispose();
+                trayIcon = null;
+            }
+
+            if (contextMenu != null)
+            {
+                contextMenu.Dispose();
+            }
+
+            if (hotKeyManager != null)
+            {
+                hotKeyManager.Dispose();
+                hotKeyManager = null;
+            }
+        }
+
         protected override void OnClosed(EventArgs e)
         {
-            hotKeyManager?.Dispose();
+            Cleanup();
             base.OnClosed(e);
+        }
+
+        protected override void OnStateChanged(EventArgs e)
+        {
+            if (WindowState == WindowState.Minimized)
+            {
+                this.Hide();
+            }
+            base.OnStateChanged(e);
         }
     }
 }
