@@ -31,34 +31,31 @@ namespace InspirationRecorder
             }
 
             var lines = File.ReadAllLines(filePath).ToList();
-            var headerLineIndex = lines.FindIndex(line => 
-                line.StartsWith("# ") && line != dateHeader);
-
-            // 如果找不到其他日期的标题，就在文件开头添加
-            if (headerLineIndex == -1)
+            
+            // 查找今天的日期标题
+            var todayHeaderIndex = lines.FindIndex(line => line == dateHeader);
+            
+            if (todayHeaderIndex != -1)
             {
-                if (!lines.Any() || lines[0] != dateHeader)
+                // 如果找到今天的日期标题，在其下方插入内容
+                lines.Insert(todayHeaderIndex + 1, formattedContent);
+            }
+            else
+            {
+                // 如果没有找到今天的日期标题，在第一个日期标题之前插入
+                var anyHeaderIndex = lines.FindIndex(line => line.StartsWith("# "));
+                
+                if (anyHeaderIndex == -1)
                 {
+                    // 如果没有任何日期标题，添加到文件开头
                     lines.Insert(0, dateHeader);
                     lines.Insert(1, formattedContent);
                 }
                 else
                 {
-                    lines.Insert(1, formattedContent);
-                }
-            }
-            else
-            {
-                // 如果已有今天的标题
-                if (headerLineIndex > 0 && lines[headerLineIndex - 1] == dateHeader)
-                {
-                    lines.Insert(headerLineIndex, formattedContent);
-                }
-                else
-                {
-                    // 在其他日期标题之前插入新的日期和内容
-                    lines.Insert(headerLineIndex, dateHeader);
-                    lines.Insert(headerLineIndex + 1, formattedContent);
+                    // 在第一个日期标题之前插入
+                    lines.Insert(anyHeaderIndex, dateHeader);
+                    lines.Insert(anyHeaderIndex + 1, formattedContent);
                 }
             }
 
