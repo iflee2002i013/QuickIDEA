@@ -28,69 +28,14 @@
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
 
-            <!-- 设置按钮 -->
-            <Button Grid.Column="0"
-                    Background="Transparent"
-                    BorderThickness="0"
-                    Cursor="Hand"
-                    Margin="0,0,15,0"
-                    Click="SettingsButton_Click">
-                <Button.Template>
-                    <ControlTemplate TargetType="Button">
-                        <Path x:Name="PencilIcon" 
-                              Data="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"
-                              Fill="#FFFFFF"
-                              Width="20"
-                              Height="20"
-                              Stretch="Uniform"
-                              Opacity="0.6">
-                            <Path.Effect>
-                                <DropShadowEffect x:Name="IconGlow" 
-                                                BlurRadius="15"
-                                                ShadowDepth="0"
-                                                Color="#FFFFFF"
-                                                Opacity="0"/>
-                            </Path.Effect>
-                            <Path.Style>
-                                <Style TargetType="Path">
-                                    <Style.Triggers>
-                                        <Trigger Property="IsMouseOver" Value="True">
-                                            <Trigger.EnterActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <DoubleAnimation 
-                                                            Storyboard.TargetProperty="Opacity"
-                                                            To="1"
-                                                            Duration="0:0:0.2"/>
-                                                        <DoubleAnimation 
-                                                            Storyboard.TargetProperty="Effect.Opacity"
-                                                            To="0.5"
-                                                            Duration="0:0:0.2"/>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </Trigger.EnterActions>
-                                            <Trigger.ExitActions>
-                                                <BeginStoryboard>
-                                                    <Storyboard>
-                                                        <DoubleAnimation 
-                                                            Storyboard.TargetProperty="Opacity"
-                                                            To="0.6"
-                                                            Duration="0:0:0.2"/>
-                                                        <DoubleAnimation 
-                                                            Storyboard.TargetProperty="Effect.Opacity"
-                                                            To="0"
-                                                            Duration="0:0:0.2"/>
-                                                    </Storyboard>
-                                                </BeginStoryboard>
-                                            </Trigger.ExitActions>
-                                        </Trigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </Path.Style>
-                        </Path>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
+            <!-- 搜索图标 -->
+            <Path Data="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.06,6.18L3,17.25Z"
+                  Fill="#FFFFFF"
+                  Width="20"
+                  Height="20"
+                  Stretch="Uniform"
+                  Opacity="0.6"
+                  Margin="0,0,15,0"/>
 
             <!-- 输入框 -->
             <TextBox x:Name="InputTextBox"
