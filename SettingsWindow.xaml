@@ -5,7 +5,8 @@
         Height="180" 
         Width="500"
         WindowStartupLocation="CenterScreen"
-        Background="#2B2B2B">
+        Background="#2B2B2B"
+        Topmost="True">
     
     <Grid Margin="20">
         <Grid.RowDefinitions>

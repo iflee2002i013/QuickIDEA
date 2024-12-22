@@ -35,8 +35,17 @@ namespace InspirationRecorder
 
         private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
+            // 暂时隐藏输入窗口
+            this.Hide();
+            
             var settingsWindow = new SettingsWindow(_config);
             settingsWindow.ShowDialog();
+            
+            // 设置窗口关闭后重新显示输入窗口
+            this.Show();
+            // 重新获取焦点
+            this.Activate();
+            InputTextBox.Focus();
         }
 
         public string InputText
