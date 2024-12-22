@@ -15,11 +15,9 @@ namespace InspirationRecorder
 
         public void SaveIdea(string content)
         {
-            var now = DateTime.Now;
-            var dateStr = now.ToString("yyyy-MM-dd");
-            var timeStr = now.ToString("HH:mm");
-            var formattedContent = $"- {timeStr} {content}";
-            
+            var today = DateTime.Now;
+            var dateHeader = $"# {today:yyyy-MM-dd}";
+            var formattedContent = $"- {today:HH:mm} {content}";
             var filePath = _config.MarkdownFilePath;
             
             // 确保文件夹存在
@@ -28,36 +26,39 @@ namespace InspirationRecorder
             // 如果文件不存在，创建文件
             if (!File.Exists(filePath))
             {
-                File.WriteAllText(filePath, $"# {dateStr}\n{formattedContent}\n");
+                File.WriteAllText(filePath, $"{dateHeader}\n{formattedContent}\n");
                 return;
             }
 
             var lines = File.ReadAllLines(filePath).ToList();
-            
-            // 查找今天的日期标题
-            var todayHeaderIndex = lines.FindIndex(line => line == $"# {dateStr}");
-            
-            if (todayHeaderIndex != -1)
+            var headerLineIndex = lines.FindIndex(line => 
+                line.StartsWith("# ") && line != dateHeader);
+
+            // 如果找不到其他日期的标题，就在文件开头添加
+            if (headerLineIndex == -1)
             {
-                // 如果找到今天的日期标题，在其下方插入内容
-                lines.Insert(todayHeaderIndex + 1, formattedContent);
-            }
-            else
-            {
-                // 如果没有找到今天的日期标题，在第一个日期标题之前插入
-                var anyHeaderIndex = lines.FindIndex(line => line.StartsWith("# "));
-                
-                if (anyHeaderIndex == -1)
+                if (!lines.Any() || lines[0] != dateHeader)
                 {
-                    // 如果没有任何日期标题，添加到文件开头
-                    lines.Insert(0, $"# {dateStr}");
+                    lines.Insert(0, dateHeader);
                     lines.Insert(1, formattedContent);
                 }
                 else
                 {
-                    // 在第一个日期标题之前插入
-                    lines.Insert(anyHeaderIndex, $"# {dateStr}");
-                    lines.Insert(anyHeaderIndex + 1, formattedContent);
+                    lines.Insert(1, formattedContent);
+                }
+            }
+            else
+            {
+                // 如果已有今天的标题
+                if (headerLineIndex > 0 && lines[headerLineIndex - 1] == dateHeader)
+                {
+                    lines.Insert(headerLineIndex, formattedContent);
+                }
+                else
+                {
+                    // 在其他日期标题之前插入新的日期和内容
+                    lines.Insert(headerLineIndex, dateHeader);
+                    lines.Insert(headerLineIndex + 1, formattedContent);
                 }
             }
 

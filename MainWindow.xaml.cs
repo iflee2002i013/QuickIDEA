@@ -36,7 +36,7 @@ namespace InspirationRecorder
             if (IsAnyWindowFullScreen())
                 return;
 
-            var inputWindow = new InputWindow(_config);
+            var inputWindow = new InputWindow();
             inputWindow.ShowDialog();
 
             if (!string.IsNullOrWhiteSpace(inputWindow.InputText))
