@@ -5,9 +5,12 @@ namespace InspirationRecorder
 {
     public partial class InputWindow : Window
     {
-        public InputWindow()
+        private readonly Config _config;
+
+        public InputWindow(Config config)
         {
             InitializeComponent();
+            _config = config;
             
             // 注册按键事件
             this.KeyDown += InputWindow_KeyDown;
@@ -28,6 +31,12 @@ namespace InspirationRecorder
                 // ESC取消
                 this.Close();
             }
+        }
+
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var settingsWindow = new SettingsWindow(_config);
+            settingsWindow.ShowDialog();
         }
 
         public string InputText
